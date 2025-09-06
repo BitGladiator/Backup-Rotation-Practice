@@ -25,12 +25,20 @@ function create_backup(){
 
 function perform_rotation(){
    backups=($(ls -t "${backup_dir}/backup_"*.zip 2>/dev/null))
-   echo "${backups[@]}"
+   if [ "${#backups[@]}" -gt 5 ]; then
+           echo "Performing rotation for 5 days"
+           backups_to_remove=("${backups[@]:5}")
+           echo "${backups_to_remove[@]}" 
+           for backup in "${backups_to_remove[@]}";
+           do 
+                   rm -f ${backup}
+           done
+   fi
+
 }
 
 
 
 create_backup
 perform_rotation
-
 
