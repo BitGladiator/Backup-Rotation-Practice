@@ -37,10 +37,15 @@ function validate_inputs(){
         exit 1
     fi
 }
-
+function check_space(){
+    local available=$(df "$2" | tail -1 | awk '{print $4}')
+    if [ "$available" -lt 1000000 ]; then 
+        echo "WARNING: Low disk space (less than 1GB available)"
+    fi
+}
 
 validate_inputs "$@"
-
+check_space "$@"
 source_dir=$1
 timestamp=$(date '+%Y-%m-%d-%H-%M-%S') 
 backup_dir=$2
@@ -51,6 +56,7 @@ function create_backup(){
             echo "backup generated successfully for ${timestamp}"
     else
             echo "ERROR: Backup failed"
+            rm -f "$backup_file"  # Clean up failed backup
             exit 1
     fi
 }
