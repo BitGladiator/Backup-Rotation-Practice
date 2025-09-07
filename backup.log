@@ -1,0 +1,14 @@
+[2025-09-07 17:53:21] INFO: Starting backup process
+[2025-09-07 17:53:21] INFO: Source:  | Destination: 
+[2025-09-07 17:53:21] ERROR: Please provide both source and backup directories
+[2025-09-07 17:54:30] INFO: Starting backup process
+[2025-09-07 17:54:30] ERROR: Please provide both source and backup directories
+[2025-09-07 17:55:07] ERROR: Please provide both source and backup directories
+[2025-09-07 17:55:23] INFO: Input validation passed
+[2025-09-07 17:55:23] INFO: Disk space check passed
+[2025-09-07 17:55:23] INFO: Creating backup archive: /home/kernel_dragon/Projects/backup-practice/backups/backup_2025-09-07-17-55-23.zip
+[2025-09-07 17:55:23] SUCCESS: Backup completed successfully (1.5K)
+[2025-09-07 17:55:23] INFO: Performing rotation (removing old backups)
+[2025-09-07 17:55:23] INFO: Removing old backup: backup_2025-09-06-10-54-27.zip
+[2025-09-07 17:55:23] INFO: Rotation completed
+[2025-09-07 17:55:23] INFO: Backup process completed successfully
