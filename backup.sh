@@ -3,8 +3,30 @@
 << readme
 This is a script for backup with 5-day rotation
 Usage:
-./backup.sh <path to your source> <path to backup folder>
+./backup.sh [source] [backup_folder]
+If no arguments provided, will use settings from backup.conf
 readme
+
+# Config file support
+CONFIG_FILE="backup.conf"
+
+function create_sample_config(){
+    echo "Creating sample config file: $CONFIG_FILE"
+    cat > "$CONFIG_FILE" << EOF
+# Backup Script Configuration
+DEFAULT_SOURCE="/home/\$USER/Documents"
+DEFAULT_BACKUP_DIR="/backup"
+DEFAULT_RETENTION_DAYS=5
+EOF
+    echo "Config created! Edit $CONFIG_FILE and run script again"
+    exit 0
+}
+
+function load_config(){
+    if [ -f "$CONFIG_FILE" ]; then
+        source "$CONFIG_FILE"
+    fi
+}
 
 # Simple logging function
 function log_message(){
@@ -14,33 +36,53 @@ function log_message(){
 }
 
 function display_usage(){
-        echo "Usage: ./backup.sh <path to your source> <path to backup folder>"
+    echo "Usage: ./backup.sh [source] [backup_folder]"
+    echo "  --setup     Create sample configuration file"
 }
 
 function validate_inputs(){
-    if [ $# -ne 2 ]; then 
+    # Handle setup command
+    if [ "$1" = "--setup" ]; then
+        create_sample_config
+    fi
+    
+    # If no arguments, try config file
+    if [ $# -eq 0 ]; then
+        load_config
+        if [ -z "$DEFAULT_SOURCE" ] || [ -z "$DEFAULT_BACKUP_DIR" ]; then
+            log_message "ERROR: No config file found. Run: ./backup.sh --setup"
+            display_usage
+            exit 1
+        fi
+        source_dir="$DEFAULT_SOURCE"
+        backup_dir="$DEFAULT_BACKUP_DIR"
+        log_message "INFO: Using config file settings"
+    elif [ $# -eq 2 ]; then
+        source_dir="$1"
+        backup_dir="$2"
+    else
         log_message "ERROR: Please provide both source and backup directories"
         display_usage
         exit 1
     fi
     
-    if [ ! -d "$1" ]; then
-        log_message "ERROR: Source directory '$1' does not exist"
+    if [ ! -d "$source_dir" ]; then
+        log_message "ERROR: Source directory '$source_dir' does not exist"
         exit 1
     fi
     
-    if [ ! -r "$1" ]; then
-        log_message "ERROR: Cannot read source directory '$1'"
+    if [ ! -r "$source_dir" ]; then
+        log_message "ERROR: Cannot read source directory '$source_dir'"
         exit 1
     fi
     
-    if [ ! -d "$2" ]; then
-        log_message "INFO: Creating backup directory '$2'"
-        mkdir -p "$2" || { log_message "ERROR: Cannot create backup directory"; exit 1; }
+    if [ ! -d "$backup_dir" ]; then
+        log_message "INFO: Creating backup directory '$backup_dir'"
+        mkdir -p "$backup_dir" || { log_message "ERROR: Cannot create backup directory"; exit 1; }
     fi
     
-    if [ ! -w "$2" ]; then
-        log_message "ERROR: Cannot write to backup directory '$2'"
+    if [ ! -w "$backup_dir" ]; then
+        log_message "ERROR: Cannot write to backup directory '$backup_dir'"
         exit 1
     fi
     
@@ -49,7 +91,7 @@ function validate_inputs(){
 
 # Simple disk space check
 function check_space(){
-    local available=$(df "$2" | tail -1 | awk '{print $4}')
+    local available=$(df "$backup_dir" | tail -1 | awk '{print $4}')
     if [ "$available" -lt 1000000 ]; then  # Less than 1GB
         log_message "WARNING: Low disk space (less than 1GB available)"
     else
@@ -57,13 +99,18 @@ function check_space(){
     fi
 }
 
+log_message "INFO: Starting backup process"
 
 validate_inputs "$@"
-check_space "$@"
 
-source_dir=$1
+log_message "INFO: Source: $source_dir | Destination: $backup_dir"
+check_space
+
+# Load retention days from config
+load_config
+retention_days=${DEFAULT_RETENTION_DAYS:-5}
+
 timestamp=$(date '+%Y-%m-%d-%H-%M-%S') 
-backup_dir=$2
 backup_file="${backup_dir}/backup_${timestamp}.zip"
 
 function create_backup(){
@@ -82,9 +129,9 @@ function create_backup(){
 
 function perform_rotation(){
    backups=($(ls -t "${backup_dir}/backup_"*.zip 2>/dev/null))
-   if [ "${#backups[@]}" -gt 5 ]; then
-           log_message "INFO: Performing rotation (removing old backups)"
-           backups_to_remove=("${backups[@]:5}")
+   if [ "${#backups[@]}" -gt "$retention_days" ]; then
+           log_message "INFO: Performing rotation (keeping $retention_days backups)"
+           backups_to_remove=("${backups[@]:$retention_days}")
            for backup in "${backups_to_remove[@]}";
            do 
                    log_message "INFO: Removing old backup: $(basename "$backup")"

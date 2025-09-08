@@ -12,3 +12,9 @@
 [2025-09-07 17:55:23] INFO: Removing old backup: backup_2025-09-06-10-54-27.zip
 [2025-09-07 17:55:23] INFO: Rotation completed
 [2025-09-07 17:55:23] INFO: Backup process completed successfully
+[2025-09-08 18:13:52] INFO: Starting backup process
+[2025-09-08 18:13:52] INFO: Source:  | Destination: 
+[2025-09-08 18:13:52] ERROR: Please provide both source and backup directories
+[2025-09-08 18:14:01] INFO: Starting backup process
+[2025-09-08 18:14:01] INFO: Source:  | Destination: 
+[2025-09-08 18:14:01] ERROR: Please provide both source and backup directories
